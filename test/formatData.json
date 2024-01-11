@@ -1,0 +1,9 @@
+{
+    "date_time": "2024-01-11T06:15:58.000000Z",
+    "serial_number": "PUB0012",
+    "set_buzzer": false,
+    "mode": 0,
+    "sleep_mode_standby": 300,
+    "sleep_mode_siaga3": 60,
+    "override_mode": 100
+}

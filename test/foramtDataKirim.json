@@ -1,0 +1,17 @@
+{
+    "serial_number": "PUB0003",
+    "date_time": "2023-11-14T08:04:01",
+    "firmware_version": "V2.0.5.3a",
+    "data_sensor": {
+        "voltage": 13.56,
+        "arus": 1.05,
+        "battery_consumtion": 14.25,
+        "intensistas_cahaya": 1.67
+    },
+    "status_sistem": {
+        "current_ticking_time": 8507,
+        "current_sendtime_period": 30,
+        "current_buzzer_state": 0,
+        "current_mode": 3
+    }
+}
