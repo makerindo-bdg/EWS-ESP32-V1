@@ -58,7 +58,9 @@ void Connection::reconnectWiFi()
     // delay(1000);
     WiFi.mode(WIFI_STA);
     WiFi.begin(this->saved_wifi_ssid.c_str(), this->saved_wifi_password.c_str());
+#ifdef DEBUG
     Serial.println("SSID: " + this->saved_wifi_ssid + " Password: " + this->saved_wifi_password);
+#endif
     // delay(1000);
   }
 }
@@ -69,7 +71,7 @@ Connection::Connection() : Serial_Con(2)
   this->mqtt_connected = false;
 }
 
-String Connection::getWifiSSID()
+String Connection::getSavedWifiSSID()
 {
   EEPROM.begin(4000);
   this->saved_wifi_ssid = EEPROM.readString(2000);
@@ -78,7 +80,7 @@ String Connection::getWifiSSID()
   return this->saved_wifi_ssid;
 }
 
-String Connection::getWifiPassword()
+String Connection::getSavedWifiPassword()
 {
   EEPROM.begin(4000);
   this->saved_wifi_password = EEPROM.readString(2050);
@@ -197,7 +199,7 @@ void Connection::mqttReconnect()
 #endif
     // Attempt to connect
     this->client.setClient(this->espClient);
-    this->client.setServer(this->mqttServer.c_str(), 1883);
+    this->client.setServer(MQTT_SERVER, 1883);
     this->client.setCallback(this->mqttCallback);
     this->client.setBufferSize(4096);
     if (this->client.connect(this->id_mqtt.c_str()))
@@ -208,9 +210,11 @@ void Connection::mqttReconnect()
       // Once connected, publish an announcement...
       // this->client.publish(this->last_topic_published.c_str(), "hello world");
       // ... and resubscribe
-      this->client.subscribe(this->last_topic_subscribed.c_str());
-      // client.flush();
+      this->client.subscribe(MQTT_TOPIC_SUBSCRIBE);
+// client.flush();
+#ifdef DEBUG
       Serial.println("Subscribed");
+#endif
     }
     else
     {
@@ -264,9 +268,11 @@ void Connection::startWiFiManager(String APName, String APPassword, int Mode, in
   this->AP_Password = APPassword;
 
 #ifdef DEBUG_WIFI_MANAGER
+#ifdef DEBUG
   Serial.println("WiFiManager Started");
 #endif
-
+#endif
+  wm.setConnectTimeout(10);
   wm.setConfigPortalTimeout(timeout);
   if (Mode == WIFI_SET_ONDEMAND)
   {
@@ -293,20 +299,22 @@ void Connection::startWiFiManager(String APName, String APPassword, int Mode, in
     this->saved_wifi_ssid = wm.getWiFiSSID();
     this->saved_wifi_password = wm.getWiFiPass();
     Serial.println("connected...yeey :)");
+    EEPROM.begin(4000);
+    EEPROM.writeString(2000, wm.getWiFiSSID());
+    EEPROM.writeString(2050, wm.getWiFiPass());
+    Serial.println("WiFi connected");
+    Serial.println("Local IP");
+    Serial.println(WiFi.localIP());
+    EEPROM.commit();
+    EEPROM.end();
 #endif
     this->wifi_connected = true;
   }
 
-#ifdef DEBUG_WIFI_MANAGER
-  Serial.println("WiFi connected");
-  Serial.println("Local IP");
-  Serial.println(WiFi.localIP());
+  this->saved_wifi_ssid = this->getSavedWifiSSID();
+  this->saved_wifi_password = this->getSavedWifiPassword();
 
-  EEPROM.begin(4000);
-  EEPROM.writeString(2000, wm.getWiFiSSID());
-  EEPROM.writeString(2050, wm.getWiFiPass());
-  EEPROM.commit();
-  EEPROM.end();
+#ifdef DEBUG_WIFI_MANAGER
 
 #endif
 }

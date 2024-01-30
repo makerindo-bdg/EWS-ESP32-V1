@@ -24,8 +24,8 @@ public:
   void reconnectWiFi();
   void disconnect();
   bool isConnected();
-  String getWifiSSID();
-  String getWifiPassword();
+  String getSavedWifiSSID();
+  String getSavedWifiPassword();
   void send(String message);
   void sendSerial(String message);
   String receive();

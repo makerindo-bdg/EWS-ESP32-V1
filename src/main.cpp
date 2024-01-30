@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <TaskScheduler.h>
+#include <OneButton.h>
 #include <ArduinoQueue.h>
 #include "header/connection.h"
 #include "header/storageHandler.h"
@@ -7,7 +8,9 @@
 #include "header/outputHandler.h"
 
 void t1Callback();
-Task t1(5000, TASK_FOREVER, &t1Callback);
+void t2Callback();
+Task t1(2000, TASK_FOREVER, &t1Callback);
+Task t2(1000, TASK_FOREVER, &t2Callback);
 
 typedef struct
 {
@@ -27,19 +30,35 @@ StorageHandler storage_h;
 JsonDocument doc_terima;
 JsonDocument doc_kirim;
 
+
+OneButton button(0, true);
+
+
 timerConfig ins;
+
+void restartWiFiManager()
+{
+  con_h.startWiFiManager("SETTING", "admin1234", WIFI_SET_ONDEMAND, 120);
+}
+
 
 void setup()
 {
+  #ifdef DEBUG
   Serial.begin(115200);
-  con_h.connectSerial(9600, 33, 32);
+  #endif
+  con_h.connectSerial(9600, 32, 33);
 
   con_h.startWiFiManager("SETTING", "admin1234", WIFI_SET_AUTOCONNECT, 120);
   con_h.connectMQTT(MQTT_SERVER, 1883, MQTT_ID);
   con_h.mqttSubscribe(MQTT_TOPIC_SUBSCRIBE);
   runner.init();
   runner.addTask(t1);
+  runner.addTask(t2);
   t1.enable();
+  t2.enable();
+
+  button.attachClick(restartWiFiManager);
 }
 
 void loop()
@@ -47,7 +66,9 @@ void loop()
   String msgMQTT = con_h.getLastMessageMQTT();
   if (msgMQTT != "")
   {
+    #ifdef DEBUG
     Serial.println(msgMQTT);
+    #endif
 
     deserializeJson(doc_terima, msgMQTT);
 
@@ -78,33 +99,79 @@ void loop()
 
       if (mode == 0)
       {
+        #ifdef DEBUG
         Serial.println("Mode Stanby");
+        #endif
         con_h.sendSerial("0,0,1,*");
         /* code */
       }
       else if (mode == 1)
       {
+        #ifdef DEBUG
         Serial.println("Mode Siaga3");
+        #endif
         instructions.enqueue({1000, true});
-        instructions.enqueue({1000, false});
+        instructions.enqueue({500, false});
         instructions.enqueue({1000, true});
-        instructions.enqueue({1000, false});
+        instructions.enqueue({500, false});
         instructions.enqueue({1000, true});
-        instructions.enqueue({1000, false});
+        instructions.enqueue({500, false});
+        instructions.enqueue({5000, true});
+
+        instructions.enqueue({2000, false});
+
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({5000, true});
+
+        instructions.enqueue({2000, false});
+
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({5000, true});
+
       }
       else if (mode == 2)
       {
+        #ifdef DEBUG
         Serial.println("Mode Siaga2");
+        #endif
         instructions.enqueue({1000, true});
-        instructions.enqueue({1000, false});
+        instructions.enqueue({500, false});
         instructions.enqueue({1000, true});
-        instructions.enqueue({1000, false});
+        instructions.enqueue({500, false});
+        instructions.enqueue({5000, true});
+
+        instructions.enqueue({2000, false});
+
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({5000, true});
+
+        instructions.enqueue({2000, false});
+        
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({1000, true});
+        instructions.enqueue({500, false});
+        instructions.enqueue({5000, true});
       }
       else if (mode == 3)
       {
+        #ifdef DEBUG
         Serial.println("Mode Siaga1");
-        instructions.enqueue({1000, true});
-        instructions.enqueue({1000, false});
+        #endif
+        instructions.enqueue({20000, true});
       }
 
       // instructions.enqueue();
@@ -114,14 +181,18 @@ void loop()
   if (!instructions.isEmpty() && !status_h.getOperate())
   {
     ins = instructions.dequeue();
+    #ifdef DEBUG
     Serial.println("Timer: " + (String)ins.timer);
     Serial.println("isOn: " + (String)ins.isOn);
+    #endif
 
     if (ins.isOn)
     {
       // TODO ON Lampu, Buzzer
       buzzer.on();
+      #ifdef DEBUG
       Serial.println("Buzzer On");
+      #endif
       con_h.sendSerial((String)status_h.getMode() + (String) ",1,1,*");
     }
 
@@ -138,7 +209,9 @@ void loop()
       {
         buzzer.off();
         // TODO ON Lampu, Buzzer
+        #ifdef DEBUG
         Serial.println("Buzzer Off");
+        #endif
         con_h.sendSerial((String)status_h.getMode() + (String) ",0,1,*");
       }
 
@@ -150,7 +223,9 @@ void loop()
   if (msgSerial != "")
   {
     String dataStr[8];
+    #ifdef DEBUG
     Serial.print(msgSerial);
+    #endif
 
     int index1 = msgSerial.indexOf(',');
     int index2 = msgSerial.indexOf(',', index1 + 1);
@@ -160,7 +235,7 @@ void loop()
     int index6 = msgSerial.indexOf(',', index5 + 1);
     int index7 = msgSerial.indexOf(',', index6 + 1);
     int index8 = msgSerial.indexOf(',', index7 + 1);
-    
+
     dataStr[0] = msgSerial.substring(0, index1);
     dataStr[1] = msgSerial.substring(index1 + 1, index2);
     dataStr[2] = msgSerial.substring(index2 + 1, index3);
@@ -170,7 +245,7 @@ void loop()
     dataStr[6] = msgSerial.substring(index6 + 1, index7);
     dataStr[7] = msgSerial.substring(index7 + 1, index8);
 
-    doc_kirim["serial_number"] = "PUB0002";
+    doc_kirim["serial_number"] = "PUB_TEST_1";
     doc_kirim["date_time"] = "2021-01-01 00:00:00";
     doc_kirim["firmware_version"] = "V2.0.6";
     doc_kirim["data_sensor"]["voltage"] = dataStr[0].toFloat();
@@ -186,17 +261,27 @@ void loop()
     serializeJson(doc_kirim, temp);
 
     con_h.mqttPublish(MQTT_TOPIC_PUBLISH, temp.c_str());
+    buzzer.on();
+    delay(100);
+    buzzer.off();
   }
 
+  button.tick();
   runner.execute();
-  con_h.connectionLoopMQTT();
   con_h.connectionLoop();
   con_h.connectionLoopSerial();
 }
 
+void t2Callback()
+{
+  con_h.reconnectWiFi();
+
+  con_h.connectionLoopMQTT();
+  // con_h.sendSerial("REQ,*");
+}
+
 void t1Callback()
 {
-
-  // Serial.println("Hello World");
+  Serial.println("Hello World");
   con_h.sendSerial("REQ,*");
 }

@@ -36,6 +36,7 @@ JsonDocument StorageHandler::loadConfig()
     DeserializationError error = deserializeJson(doc, test);
     if (error)
     {
+        
         Serial.println(F("Failed to read file, using default configuration"));
         doc["status"] = "error";
         return doc;

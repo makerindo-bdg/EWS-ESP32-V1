@@ -9,10 +9,14 @@
 #define JSON_SIZE 1024
 
 
-#define MQTT_ID "NUTRIFERADS_PUB0012"
+#define MQTT_ID "PUB0002_test"
 #define MQTT_SERVER "193.168.195.119"
-#define MQTT_TOPIC_SUBSCRIBE "ews/cloud_to_public_PUB0002"
-#define MQTT_TOPIC_PUBLISH "ews/public_to_cloud_PUB0002"
+#define MQTT_TOPIC_SUBSCRIBE "ews/cloud_to_public_PUB0002_test"
+#define MQTT_TOPIC_PUBLISH "ews/public_to_cloud_PUB0002_test"
 
 #define WIFI_AP_NAME "SETTING"
 #define WIFI_AP_PASSWORD "admin1234"
+
+#define DEBUG_WIFI_MANAGER 0
+
+#define DEBUG true
