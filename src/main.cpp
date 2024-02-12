@@ -9,7 +9,7 @@
 
 void t1Callback();
 void t2Callback();
-Task t1(2000, TASK_FOREVER, &t1Callback);
+Task t1(20000, TASK_FOREVER, &t1Callback);
 Task t2(1000, TASK_FOREVER, &t2Callback);
 
 typedef struct
@@ -30,26 +30,24 @@ StorageHandler storage_h;
 JsonDocument doc_terima;
 JsonDocument doc_kirim;
 
-
 OneButton button(0, true);
-
 
 timerConfig ins;
 
 void restartWiFiManager()
 {
-  con_h.startWiFiManager("SETTING", "admin1234", WIFI_SET_ONDEMAND, 120);
+  con_h.startWiFiManager("WM_" + (String)DEVICE_ID, "ews12345", WIFI_SET_ONDEMAND, 120);
 }
-
 
 void setup()
 {
-  #ifdef DEBUG
+#ifdef DEBUG
   Serial.begin(115200);
-  #endif
+#endif
+
   con_h.connectSerial(9600, 32, 33);
 
-  con_h.startWiFiManager("SETTING", "admin1234", WIFI_SET_AUTOCONNECT, 120);
+  con_h.startWiFiManager("WM_" + (String)DEVICE_ID, "ews12345", WIFI_SET_AUTOCONNECT, 120);
   con_h.connectMQTT(MQTT_SERVER, 1883, MQTT_ID);
   con_h.mqttSubscribe(MQTT_TOPIC_SUBSCRIBE);
   runner.init();
@@ -66,9 +64,9 @@ void loop()
   String msgMQTT = con_h.getLastMessageMQTT();
   if (msgMQTT != "")
   {
-    #ifdef DEBUG
+#ifdef DEBUG
     Serial.println(msgMQTT);
-    #endif
+#endif
 
     deserializeJson(doc_terima, msgMQTT);
 
@@ -99,17 +97,17 @@ void loop()
 
       if (mode == 0)
       {
-        #ifdef DEBUG
+#ifdef DEBUG
         Serial.println("Mode Stanby");
-        #endif
+#endif
         con_h.sendSerial("0,0,1,*");
         /* code */
       }
       else if (mode == 1)
       {
-        #ifdef DEBUG
+#ifdef DEBUG
         Serial.println("Mode Siaga3");
-        #endif
+#endif
         instructions.enqueue({1000, true});
         instructions.enqueue({500, false});
         instructions.enqueue({1000, true});
@@ -137,13 +135,12 @@ void loop()
         instructions.enqueue({1000, true});
         instructions.enqueue({500, false});
         instructions.enqueue({5000, true});
-
       }
       else if (mode == 2)
       {
-        #ifdef DEBUG
+#ifdef DEBUG
         Serial.println("Mode Siaga2");
-        #endif
+#endif
         instructions.enqueue({1000, true});
         instructions.enqueue({500, false});
         instructions.enqueue({1000, true});
@@ -159,7 +156,7 @@ void loop()
         instructions.enqueue({5000, true});
 
         instructions.enqueue({2000, false});
-        
+
         instructions.enqueue({1000, true});
         instructions.enqueue({500, false});
         instructions.enqueue({1000, true});
@@ -168,10 +165,10 @@ void loop()
       }
       else if (mode == 3)
       {
-        #ifdef DEBUG
+#ifdef DEBUG
         Serial.println("Mode Siaga1");
-        #endif
-        instructions.enqueue({20000, true});
+#endif
+        instructions.enqueue({40000, true});
       }
 
       // instructions.enqueue();
@@ -181,18 +178,18 @@ void loop()
   if (!instructions.isEmpty() && !status_h.getOperate())
   {
     ins = instructions.dequeue();
-    #ifdef DEBUG
+#ifdef DEBUG
     Serial.println("Timer: " + (String)ins.timer);
     Serial.println("isOn: " + (String)ins.isOn);
-    #endif
+#endif
 
     if (ins.isOn)
     {
       // TODO ON Lampu, Buzzer
       buzzer.on();
-      #ifdef DEBUG
+#ifdef DEBUG
       Serial.println("Buzzer On");
-      #endif
+#endif
       con_h.sendSerial((String)status_h.getMode() + (String) ",1,1,*");
     }
 
@@ -208,10 +205,10 @@ void loop()
       if (ins.isOn)
       {
         buzzer.off();
-        // TODO ON Lampu, Buzzer
-        #ifdef DEBUG
+// TODO ON Lampu, Buzzer
+#ifdef DEBUG
         Serial.println("Buzzer Off");
-        #endif
+#endif
         con_h.sendSerial((String)status_h.getMode() + (String) ",0,1,*");
       }
 
@@ -223,9 +220,9 @@ void loop()
   if (msgSerial != "")
   {
     String dataStr[8];
-    #ifdef DEBUG
+#ifdef DEBUG
     Serial.print(msgSerial);
-    #endif
+#endif
 
     int index1 = msgSerial.indexOf(',');
     int index2 = msgSerial.indexOf(',', index1 + 1);
@@ -245,7 +242,7 @@ void loop()
     dataStr[6] = msgSerial.substring(index6 + 1, index7);
     dataStr[7] = msgSerial.substring(index7 + 1, index8);
 
-    doc_kirim["serial_number"] = "PUB_TEST_1";
+    doc_kirim["serial_number"] = DEVICE_ID;
     doc_kirim["date_time"] = "2021-01-01 00:00:00";
     doc_kirim["firmware_version"] = "V2.0.6";
     doc_kirim["data_sensor"]["voltage"] = dataStr[0].toFloat();
