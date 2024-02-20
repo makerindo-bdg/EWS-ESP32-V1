@@ -1,21 +1,21 @@
-#include "header/statusHandler.h"
+#include "Status.h"
 
-void statusHandler::setLastMode(int lastMode)
+void Status::setLastMode(int lastMode)
 {
     this->lastMode = lastMode;
 }
 
-int statusHandler::getLastMode()
+int Status::getLastMode()
 {
     return this->lastMode;
 }
 
-void statusHandler::setLastTime(unsigned long lastTime)
+void Status::setLastTime(unsigned long lastTime)
 {
     this->lastTime = lastTime;
 }
 
-String statusHandler::modeToString(int mode)
+String Status::modeToString(int mode)
 {
     switch (mode)
     {
@@ -36,78 +36,78 @@ String statusHandler::modeToString(int mode)
     return "";
 }
 
-unsigned long statusHandler::getLastTime()
+unsigned long Status::getLastTime()
 {
     return this->lastTime;
 }
 
-void statusHandler::setCurrentTime(unsigned long currentTime)
+void Status::setCurrentTime(unsigned long currentTime)
 {
     this->currentTime = currentTime;
 }
 
-unsigned long statusHandler::getCurrentTime()
+unsigned long Status::getCurrentTime()
 {
     return this->currentTime;
 }
 
-void statusHandler::setOperate(bool isOperate)
+void Status::setOperate(bool isOperate)
 {
     this->isOperate = isOperate;
 }
 
-bool statusHandler::getOperate()
+bool Status::getOperate()
 {
     return this->isOperate;
 }
 
-void statusHandler::setOverrideMode(int mode)
+void Status::setOverrideMode(int mode)
 {
     this->overrideMode = mode;
 }
 
-int statusHandler::getOverrideMode()
+int Status::getOverrideMode()
 {
     return this->overrideMode;
 }
 
-void statusHandler::setStatusChanged(bool isStatusChanged)
+void Status::setStatusChanged(bool isStatusChanged)
 {
     this->isStatusChanged = isStatusChanged;
 }
 
-bool statusHandler::getStatusChanged()
+bool Status::getStatusChanged()
 {
     return this->isStatusChanged;
 }
 
-statusHandler::statusHandler(/* args */)
+Status::Status(/* args */)
 {
     this->mode = 0;
     this->isBuzzerOn = false;
 }
 
-void statusHandler::setMode(int mode)
+void Status::setMode(int mode)
 {
     this->lastMode = this->mode;
     this->mode = mode;
 }
 
-int statusHandler::getMode()
+int Status::getMode()
 {
     return this->mode;
 }
 
-void statusHandler::setBuzzer(bool isBuzzerOn)
+void Status::setBuzzer(bool isBuzzerOn)
 {
     this->isBuzzerOn = isBuzzerOn;
 }
 
-bool statusHandler::getBuzzer()
+bool Status::getBuzzer()
 {
     return this->isBuzzerOn;
 }
 
-statusHandler::~statusHandler()
+Status::~Status()
 {
 }

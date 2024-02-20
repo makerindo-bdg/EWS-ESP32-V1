@@ -1,11 +1,11 @@
-#include "dev_config.h"
+#include <dev_config.h>
 #include <ArduinoJson.h>
 #include <EEPROM.h>
 
-class StorageHandler
+class Storage
 {
 public:
-  StorageHandler();
+  Storage();
   void startEEPROM(int size);
   void saveConfig(JsonDocument doc);
   JsonDocument loadConfig();

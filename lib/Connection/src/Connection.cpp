@@ -1,5 +1,5 @@
-#include "header/connection.h"
-#include "EEPROM.h"
+#include "connection.h"
+#include <EEPROM.h>
 
 /* Core where the task should run */
 
@@ -47,6 +47,24 @@ void Connection::sendSerial(String message)
 void Connection::connectSerial(int baudrate, int rx, int tx)
 {
   this->Serial_Con.begin(baudrate, SERIAL_8N1, rx, tx);
+}
+
+void Connection::startWiFiManually()
+{
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    WiFi.disconnect();
+    WiFi.mode(WIFI_OFF);
+    // delay(1000);
+    WiFi.mode(WIFI_STA);
+    this->saved_wifi_ssid = this->getSavedWifiSSID();
+    this->saved_wifi_password = this->getSavedWifiPassword();
+    WiFi.begin(this->saved_wifi_ssid.c_str(), this->saved_wifi_password.c_str());
+#ifdef DEBUG
+    Serial.println("SSID: " + this->saved_wifi_ssid + " Password: " + this->saved_wifi_password);
+#endif
+    // delay(1000);
+  }
 }
 
 void Connection::reconnectWiFi()

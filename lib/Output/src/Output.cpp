@@ -1,29 +1,29 @@
-#include "header/outputHandler.h"
+#include "Output.h"
 
 
-outputHandler::outputHandler(int pin)
+Output::Output(int pin)
 {
     this->pin = pin;
     pinMode(pin, OUTPUT);
 }
 
-outputHandler::outputHandler()
+Output::Output()
 {
 }
 
-void outputHandler::on()
+void Output::on()
 {
     digitalWrite(pin, HIGH);
     isOn = true;
 }
 
-void outputHandler::off()
+void Output::off()
 {
     digitalWrite(pin, LOW);
     isOn = false;
 }
 
-void outputHandler::toggle()
+void Output::toggle()
 {
     if (isOn)
     {

@@ -1,6 +1,6 @@
-#include "dev_config.h"
+#include <dev_config.h>
 
-class statusHandler
+class Status
 {
 private:
     int mode;
@@ -12,7 +12,7 @@ private:
     unsigned long lastTime;
     unsigned long currentTime;
 public:
-    statusHandler(/* args */);
+    Status(/* args */);
     void setMode(int mode);
     int getMode();
 
@@ -39,5 +39,5 @@ public:
     void setBuzzer(bool isBuzzerOn);
     bool getBuzzer();
 
-    ~statusHandler();
+    ~Status();
 };

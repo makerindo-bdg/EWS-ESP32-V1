@@ -1,6 +1,6 @@
-#include "dev_config.h"
+#include <dev_config.h>
 
-class outputHandler
+class Output
 {
 private:
     int pin;
@@ -8,8 +8,8 @@ private:
 
 public:
 
-    outputHandler(int pin);
-    outputHandler();
+    Output(int pin);
+    Output();
 
     void on();
     void off();

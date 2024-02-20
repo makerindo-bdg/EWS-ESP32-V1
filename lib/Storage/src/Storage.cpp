@@ -1,15 +1,16 @@
-#include "header/storageHandler.h"
+#include "Storage.h"
+#include <Status.h>
 
-StorageHandler::StorageHandler()
+Storage::Storage()
 {
 }
 
-void StorageHandler::startEEPROM(int size)
+void Storage::startEEPROM(int size)
 {
     EEPROM.begin(size);
 }
 
-void StorageHandler::saveConfig(JsonDocument doc)
+void Storage::saveConfig(JsonDocument doc)
 {
     EEPROM.begin(4000);
 
@@ -25,7 +26,7 @@ void StorageHandler::saveConfig(JsonDocument doc)
     // Close the file
 }
 
-JsonDocument StorageHandler::loadConfig()
+JsonDocument Storage::loadConfig()
 {
     EEPROM.begin(4000);
     // Open file for reading

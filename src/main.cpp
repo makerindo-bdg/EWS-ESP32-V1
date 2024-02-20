@@ -2,15 +2,17 @@
 #include <TaskScheduler.h>
 #include <OneButton.h>
 #include <ArduinoQueue.h>
-#include "header/connection.h"
-#include "header/storageHandler.h"
-#include "header/statusHandler.h"
-#include "header/outputHandler.h"
+#include <Connection.h>
+#include <Storage.h>
+#include <Status.h>
+#include <Output.h>
+#include <dev_config.h>
+#include <OverTheAir.h>
 
 void t1Callback();
 void t2Callback();
 Task t1(20000, TASK_FOREVER, &t1Callback);
-Task t2(1000, TASK_FOREVER, &t2Callback);
+Task t2(7000, TASK_FOREVER, &t2Callback);
 
 typedef struct
 {
@@ -19,14 +21,15 @@ typedef struct
 } timerConfig;
 
 Scheduler runner;
-statusHandler status_h;
+Status status_h;
 
 ArduinoQueue<timerConfig> instructions(20);
 
-outputHandler buzzer(2);
+Output buzzer(2);
 
+OverTheAir ota;
 Connection con_h;
-StorageHandler storage_h;
+Storage storage_h;
 JsonDocument doc_terima;
 JsonDocument doc_kirim;
 
@@ -47,7 +50,10 @@ void setup()
 
   con_h.connectSerial(9600, 32, 33);
 
-  con_h.startWiFiManager("WM_" + (String)DEVICE_ID, "ews12345", WIFI_SET_AUTOCONNECT, 120);
+  con_h.startWiFiManually();
+  // con_h.startWiFiManager("WM_" + (String)DEVICE_ID, "ews12345", WIFI_SET_AUTOCONNECT, 120);
+  con_h.reconnectWiFi();
+
   con_h.connectMQTT(MQTT_SERVER, 1883, MQTT_ID);
   con_h.mqttSubscribe(MQTT_TOPIC_SUBSCRIBE);
   runner.init();
@@ -71,107 +77,133 @@ void loop()
     deserializeJson(doc_terima, msgMQTT);
 
     int mode = 100;
-    if (status_h.getOverrideMode() != doc_terima["override_mode"].as<int>())
+    if (!doc_terima["id"].isNull())
     {
-      status_h.setOverrideMode(doc_terima["override_mode"].as<int>());
+      if (doc_terima["id"].as<String>() == DEVICE_ID)
+      {
+        Serial.println("ID Match");
+        // https://bpbdbekasikab.online/
+        // bool result = ota.update("13.213.30.106", 80, "/update/firmware?id=" + (String)DEVICE_ID);
+        bool result = ota.update("13.213.30.106", 3000, "/update/firmware", false);
+        if (result)
+        {
+          Serial.println("Update Success");
+          con_h.mqttReconnect();
+          con_h.mqttPublish("ews/public_to_cloud_" + (String)DEVICE_ID + "/debug", "Update Success..");
+          ESP.restart();
+        }
+        else
+        {
+          Serial.println("Update Failed");
+          con_h.mqttReconnect();
+          con_h.mqttPublish("ews/public_to_cloud_" + (String)DEVICE_ID + "/debug", "Update Failed..");
+        }
+      }
     }
-
-    if (status_h.getOverrideMode() != 100)
+    else if (!doc_terima["override_mode"].isNull())
     {
-      mode = doc_terima["override_mode"].as<int>();
-      status_h.setOverrideMode(mode);
-    }
-    else
-    {
-      mode = doc_terima["mode"].as<int>();
-    }
-
-    if (status_h.getMode() != mode)
-    {
-      status_h.setMode(mode);
-
-      while (!instructions.isEmpty())
+      if (status_h.getOverrideMode() != doc_terima["override_mode"].as<int>())
       {
-        instructions.dequeue();
+        status_h.setOverrideMode(doc_terima["override_mode"].as<int>());
       }
 
-      if (mode == 0)
+      if (status_h.getOverrideMode() != 100)
       {
+        mode = doc_terima["override_mode"].as<int>();
+        status_h.setOverrideMode(mode);
+      }
+      else
+      {
+        mode = doc_terima["mode"].as<int>();
+      }
+
+      if (status_h.getMode() != mode)
+      {
+        status_h.setMode(mode);
+
+        while (!instructions.isEmpty())
+        {
+          instructions.dequeue();
+        }
+
+        if (mode == 0)
+        {
 #ifdef DEBUG
-        Serial.println("Mode Stanby");
+          Serial.println("Mode Stanby");
 #endif
-        con_h.sendSerial("0,0,1,*");
-        /* code */
-      }
-      else if (mode == 1)
-      {
+          con_h.sendSerial("0,0,1,*");
+          /* code */
+        }
+        else if (mode == 1)
+        {
 #ifdef DEBUG
-        Serial.println("Mode Siaga3");
+          Serial.println("Mode Siaga3");
 #endif
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({5000, true});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({5000, true});
 
-        instructions.enqueue({2000, false});
+          instructions.enqueue({2000, false});
 
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({5000, true});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({5000, true});
 
-        instructions.enqueue({2000, false});
+          instructions.enqueue({2000, false});
 
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({5000, true});
-      }
-      else if (mode == 2)
-      {
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({5000, true});
+        }
+        else if (mode == 2)
+        {
 #ifdef DEBUG
-        Serial.println("Mode Siaga2");
+          Serial.println("Mode Siaga2");
 #endif
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({5000, true});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({5000, true});
 
-        instructions.enqueue({2000, false});
+          instructions.enqueue({2000, false});
 
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({5000, true});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({5000, true});
 
-        instructions.enqueue({2000, false});
+          instructions.enqueue({2000, false});
 
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({1000, true});
-        instructions.enqueue({500, false});
-        instructions.enqueue({5000, true});
-      }
-      else if (mode == 3)
-      {
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({1000, true});
+          instructions.enqueue({500, false});
+          instructions.enqueue({5000, true});
+        }
+        else if (mode == 3)
+        {
 #ifdef DEBUG
-        Serial.println("Mode Siaga1");
+          Serial.println("Mode Siaga1");
 #endif
-        instructions.enqueue({40000, true});
-      }
+          instructions.enqueue({40000, true});
+        }
 
-      // instructions.enqueue();
+        // instructions.enqueue();
+      }
     }
   }
 
@@ -262,7 +294,7 @@ void loop()
     delay(100);
     buzzer.off();
   }
-
+  con_h.connectionLoopMQTT();
   button.tick();
   runner.execute();
   con_h.connectionLoop();
@@ -271,9 +303,9 @@ void loop()
 
 void t2Callback()
 {
+  Serial.println("Check Connection");
   con_h.reconnectWiFi();
 
-  con_h.connectionLoopMQTT();
   // con_h.sendSerial("REQ,*");
 }
 

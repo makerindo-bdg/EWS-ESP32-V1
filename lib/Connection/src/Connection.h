@@ -1,4 +1,4 @@
-#include "dev_config.h"
+#include <dev_config.h>
 #include <PubSubClient.h>
 #include <WiFiManager.h>
 #include <WiFi.h>
@@ -11,6 +11,7 @@ public:
 
   String getLastMessageMQTT();
   String getLastMessageSerial();
+  void startWiFiManually();
   void startWiFiManager(String APName, String APPassword, int Mode, int timeout);
   void connectMQTT(String server, int port, String id, String user = "", String password = "");
   void connectSerial(int baudrate, int rx, int tx);
