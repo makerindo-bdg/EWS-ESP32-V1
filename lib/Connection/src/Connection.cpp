@@ -67,6 +67,35 @@ void Connection::startWiFiManually()
   }
 }
 
+void Connection::startWiFiManually(String SSID, String Password)
+{
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    EEPROM.begin(4000);
+    EEPROM.writeString(2000, SSID);
+    EEPROM.writeString(2050, Password);
+    Serial.println("WiFi connected");
+    Serial.println("Local IP");
+    Serial.println(WiFi.localIP());
+    EEPROM.commit();
+    EEPROM.end();
+
+    WiFi.disconnect();
+    WiFi.mode(WIFI_OFF);
+    // delay(1000);
+    WiFi.mode(WIFI_STA);
+    this->saved_wifi_ssid = this->getSavedWifiSSID();
+    this->saved_wifi_password = this->getSavedWifiPassword();
+
+    WiFi.begin(SSID, Password);
+#ifdef DEBUG
+    Serial.println("SSID: " + this->saved_wifi_ssid + " Password: " + this->saved_wifi_password);
+    Serial.println("SSID manual: " + SSID + " Password manual: " + Password);
+#endif
+    // delay(1000);
+  }
+}
+
 void Connection::reconnectWiFi()
 {
   if (WiFi.status() != WL_CONNECTED)
@@ -77,7 +106,7 @@ void Connection::reconnectWiFi()
     WiFi.mode(WIFI_STA);
     WiFi.begin(this->saved_wifi_ssid.c_str(), this->saved_wifi_password.c_str());
 #ifdef DEBUG
-    Serial.println("SSID: " + this->saved_wifi_ssid + " Password: " + this->saved_wifi_password);
+    // Serial.println("SSID: " + this->saved_wifi_ssid + " Password: " + this->saved_wifi_password);
 #endif
     // delay(1000);
   }
@@ -220,7 +249,12 @@ void Connection::mqttReconnect()
     this->client.setServer(MQTT_SERVER, 1883);
     this->client.setCallback(this->mqttCallback);
     this->client.setBufferSize(4096);
+
+#if USE_PASSWORD_MQTT == true
+    if (this->client.connect(this->id_mqtt.c_str(), MQTT_USER, MQTT_PASSWORD))
+#else
     if (this->client.connect(this->id_mqtt.c_str()))
+#endif
     {
 #ifdef DEBUG_MQTT
       Serial.println("connected");
@@ -268,6 +302,16 @@ void Connection::connectMQTT(String server, int port, String id, String user, St
   this->client.setCallback(this->mqttCallback);
   this->client.setBufferSize(4096);
   this->mqtt_connected = true;
+
+#if USE_PASSWORD_MQTT == true
+  if (!this->client.connect(this->id_mqtt.c_str(), MQTT_USER, MQTT_PASSWORD))
+  {
+#ifdef DEBUG_MQTT
+    Serial.println("MQTT not connected, Reconecting...");
+#endif
+    this->mqttReconnect();
+  }
+#else
   if (!this->client.connect(this->id_mqtt.c_str()))
   {
 #ifdef DEBUG_MQTT
@@ -275,6 +319,8 @@ void Connection::connectMQTT(String server, int port, String id, String user, St
 #endif
     this->mqttReconnect();
   }
+
+#endif
   // this->client.setCredentials(user.c_str(), password.c_str());
 }
 

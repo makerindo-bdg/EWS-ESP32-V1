@@ -12,6 +12,7 @@ public:
   String getLastMessageMQTT();
   String getLastMessageSerial();
   void startWiFiManually();
+  void startWiFiManually(String SSID, String Password);
   void startWiFiManager(String APName, String APPassword, int Mode, int timeout);
   void connectMQTT(String server, int port, String id, String user = "", String password = "");
   void connectSerial(int baudrate, int rx, int tx);

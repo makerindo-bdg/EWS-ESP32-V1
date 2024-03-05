@@ -1,10 +1,12 @@
 #include "Output.h"
 
-
 Output::Output(int pin)
 {
-    this->pin = pin;
-    pinMode(pin, OUTPUT);
+    if (pin >= 0 && pin <= 40)
+    {
+        this->pin = pin;
+        pinMode(pin, OUTPUT);
+    }
 }
 
 Output::Output()
@@ -13,24 +15,33 @@ Output::Output()
 
 void Output::on()
 {
-    digitalWrite(pin, HIGH);
-    isOn = true;
+    if (pin >= 0 && pin <= 40)
+    {
+        digitalWrite(pin, HIGH);
+        isOn = true;
+    }
 }
 
 void Output::off()
 {
-    digitalWrite(pin, LOW);
-    isOn = false;
+    if (pin >= 0 && pin <= 40)
+    {
+        digitalWrite(pin, LOW);
+        isOn = false;
+    }
 }
 
 void Output::toggle()
 {
-    if (isOn)
+    if (pin >= 0 && pin <= 40)
     {
-        off();
-    }
-    else
-    {
-        on();
+        if (isOn)
+        {
+            off();
+        }
+        else
+        {
+            on();
+        }
     }
 }
